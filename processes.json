@@ -1,0 +1,32 @@
+{
+  "apps": [
+    {
+      "name": "shields:application",
+      "script": "dist/server.js",
+      "instances": 1,
+      "watch": false,
+      "exec_mode": "cluster"
+    },
+    {
+      "name": "shields:consumer:blockchain",
+      "script": "dist/handlers/consumers/blockchain.consumer.js",
+      "instances": 1,
+      "watch": false,
+      "exec_mode": "cluster"
+    },
+    {
+      "name": "shields:cronjob:processEvents",
+      "script": "dist/handlers/cronjobs/processEvents.cronjob.js",
+      "instances": 1,
+      "watch": false,
+      "exec_mode": "cluster"
+    },
+    {
+      "name": "shields:cronjob:recoverEvents",
+      "script": "dist/handlers/cronjobs/recoverEvents.cronjob.js",
+      "instances": 1,
+      "watch": false,
+      "exec_mode": "cluster"
+    }
+  ]
+}
