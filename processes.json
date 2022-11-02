@@ -1,0 +1,25 @@
+{
+  "apps": [
+    {
+      "name": "shields:application",
+      "script": "dist/server.js",
+      "instances": 1,
+      "watch": false,
+      "exec_mode": "cluster"
+    },
+    {
+      "name": "shields:cronjob:getTransaction",
+      "script": "dist/handlers/cronjobs/getTransaction.cronjob.js",
+      "instances": 1,
+      "watch": false,
+      "exec_mode": "cluster"
+    },
+    {
+      "name": "shields:cronjob:readTransaction",
+      "script": "dist/handlers/cronjobs/readTransaction.cronjob.js",
+      "instances": 1,
+      "watch": false,
+      "exec_mode": "cluster"
+    }
+  ]
+}
