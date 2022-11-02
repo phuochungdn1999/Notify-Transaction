@@ -9,7 +9,8 @@ import hpp from 'hpp';
 import morgan from 'morgan';
 import passport from 'passport';
 import 'reflect-metadata';
-import { recoverEventsJob } from './handlers/cronjobs/recoverEvents.cronjob';
+import { DatabaseController } from "./database/DatabaseController";
+
 
 class App {
   public app: express.Application;
@@ -24,7 +25,7 @@ class App {
     this.initializeMiddlewares();
     this.initializeRoutes(routes);
     this.initializeErrorHandling();
-    this.app.use(recoverEventsJob);
+    DatabaseController.ConnectDb()
   }
 
   public listen() {

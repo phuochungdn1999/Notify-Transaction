@@ -8,22 +8,15 @@
       "exec_mode": "cluster"
     },
     {
-      "name": "shields:consumer:blockchain",
-      "script": "dist/handlers/consumers/blockchain.consumer.js",
+      "name": "shields:cronjob:getTransaction",
+      "script": "dist/handlers/cronjobs/getTransaction.cronjob.js",
       "instances": 1,
       "watch": false,
       "exec_mode": "cluster"
     },
     {
-      "name": "shields:cronjob:processEvents",
-      "script": "dist/handlers/cronjobs/processEvents.cronjob.js",
-      "instances": 1,
-      "watch": false,
-      "exec_mode": "cluster"
-    },
-    {
-      "name": "shields:cronjob:recoverEvents",
-      "script": "dist/handlers/cronjobs/recoverEvents.cronjob.js",
+      "name": "shields:cronjob:readTransaction",
+      "script": "dist/handlers/cronjobs/readTransaction.cronjob.js",
       "instances": 1,
       "watch": false,
       "exec_mode": "cluster"

@@ -131,3 +131,5 @@ env_variables.yaml
 
 ### Data local
 data/**/main/*
+
+data/
