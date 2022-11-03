@@ -72,8 +72,17 @@ const excute = async () => {
   const transactionList = await Transactions.find({ hasValidate: false });
   const wallletList = await Wallets.find();
   const walletArray = wallletList.map((value) => value.walletAddress);
-  const phoneArray = wallletList.map((value) => value.phone);
-  phoneArray;
+  const hashArray = transactionList.map((value) => value.hash);
+  await Transactions.updateMany(
+    {
+      hash: {
+        $in: hashArray,
+      },
+    },
+    {
+      $set: { hasValidate: true },
+    }
+  );
   const promiseArray: any = [];
 
   if (transactionList.length !== 0) {
@@ -81,10 +90,16 @@ const excute = async () => {
       if (walletArray.includes(String(value.from).toLowerCase())) {
         // promiseArray.push(decodeTransaction(value, value.from))
         promiseArray.push(decodeTransaction(value, value.from, provider));
+        value.hasValidate = true;
       }
     });
     await Promise.all(promiseArray);
   }
+  await Transactions.updateMany(transactionList, {
+    $set: {
+      hasValidate: true,
+    },
+  });
 };
 
 const decodeTransaction = async (
@@ -376,19 +391,22 @@ const decodeTransaction = async (
       break;
 
     default:
-      message = `Transaction from ${walletAddress} to ${transaction.to} with value ${value}`;
+      message = `Transaction from ${walletAddress} to ${
+        transaction.to
+      } with value ${new BigNumber(transaction.value)
+        .dividedBy(Math.pow(10, 18))
+        .toString()}`;
       break;
   }
   const walletData = await Wallets.findOne({
     walletAddress: walletAddress.toLowerCase(),
   });
   try {
-    await client.messages.create({
-      body: message,
-      from: twilioNumber,
-      to: String(walletData?.phone),
-    });
-    transaction.hasValidate = true;
+    // await client.messages.create({
+    //   body: message,
+    //   from: twilioNumber,
+    //   to: String(walletData?.phone),
+    // });
     await transaction.save();
     logger.info(`Message ${message} send to phone ${walletData?.phone}`, {
       path: LOG_PATH,

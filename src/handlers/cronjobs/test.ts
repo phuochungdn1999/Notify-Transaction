@@ -40,63 +40,68 @@ export const getProvider = async () => {
 };
 
 async function main(): Promise<void> {
-//   let isRunning = false;
+  //   let isRunning = false;
   await excute();
 
-//   await cronjobService.create({
-//     cronTime: `*/${defaultInterval} * * * * *`,
-//     start: true,
-//     runOnInit: true,
-//     onTick: async () => {
-//       if (isRunning) {
-//         return;
-//       }
-//       isRunning = true;
+  //   await cronjobService.create({
+  //     cronTime: `*/${defaultInterval} * * * * *`,
+  //     start: true,
+  //     runOnInit: true,
+  //     onTick: async () => {
+  //       if (isRunning) {
+  //         return;
+  //       }
+  //       isRunning = true;
 
-//       try {
-//         console.log("vao day");
-//         await excute();
-//       } catch (err: any) {
-//         logger.error(`Get Transaction fail: ${err.message}`, {
-//           path: LOG_PATH,
-//           stack: err.stack,
-//         });
-//       }
+  //       try {
+  //         console.log("vao day");
+  //         await excute();
+  //       } catch (err: any) {
+  //         logger.error(`Get Transaction fail: ${err.message}`, {
+  //           path: LOG_PATH,
+  //           stack: err.stack,
+  //         });
+  //       }
 
-//       isRunning = false;
-//     },
-//   });
+  //       isRunning = false;
+  //     },
+  //   });
 }
 
 const excute = async () => {
   const provider: any = await getProvider();
-  const transactionList = await Transactions.find();
+  const transactionList = await Transactions.find({ hasValidate: false });
   const wallletList = await Wallets.find();
   const walletArray = wallletList.map((value) => value.walletAddress);
-  const phoneArray = wallletList.map((value) => value.phone);
-  (phoneArray)
+  const hashArray = transactionList.map((value) => value.hash);
+  await Transactions.updateMany(
+    {
+      hash: {
+        $in: hashArray,
+      },
+    },
+    {
+      $set: { hasValidate: true },
+    }
+  );
   const promiseArray: any = [];
-//   console.log({transactionList})
-  console.log({walletArray})
-//   console.log({transactionList})
-
 
   if (transactionList.length !== 0) {
     transactionList.forEach((value) => {
       if (walletArray.includes(String(value.from).toLowerCase())) {
         // promiseArray.push(decodeTransaction(value, value.from))
         promiseArray.push(decodeTransaction(value, value.from, provider));
+        value.hasValidate = true;
       }
     });
     await Promise.all(promiseArray);
   }
-
 };
 
 const decodeTransaction = async (
   transaction: any,
   walletAddress: any,
-  provider: any,
+  provider: any
 ) => {
   const encodeFunction = transaction.data.slice(0, 10);
   let message = "";
@@ -224,7 +229,7 @@ const decodeTransaction = async (
       } catch (error) {
         message = `Transaction from ${walletAddress} to ${transaction.to}`;
       }
-      (message);
+      message;
 
       break;
     case TransferTokenFrom:
@@ -259,7 +264,7 @@ const decodeTransaction = async (
         }
       }
 
-      (message);
+      message;
       break;
     case SafeTransferFrom:
       if (transaction.data.length == 202) {
@@ -305,7 +310,7 @@ const decodeTransaction = async (
           message = `Transfer token ${symbol} id ${idOrValue} from ${walletAddress} to ${encodeValue[1].toString()}`;
         }
       }
-      (message);
+      message;
       break;
     case Approve:
       encodeValue = ethers.utils.defaultAbiCoder.decode(
@@ -345,7 +350,7 @@ const decodeTransaction = async (
         ["address", "bool"],
         ethers.utils.hexDataSlice(transaction.data, 4)
       );
-      (encodeValue);
+      encodeValue;
 
       try {
         symbol = await contract.symbol();
@@ -357,7 +362,7 @@ const decodeTransaction = async (
           walletAddress,
           encodeValue[0].toString()
         );
-        (isApprovedForAll);
+        isApprovedForAll;
       } catch (error) {
         isNFT = false;
 
@@ -371,28 +376,30 @@ const decodeTransaction = async (
         }
       }
 
-      (message);
+      message;
       break;
     case TransferNative:
       value = new BigNumber(transaction.value)
         .dividedBy(Math.pow(10, 18))
         .toString();
       message = `Transaction from ${walletAddress} to ${transaction.to} with value ${value}`;
-      (message);
+      message;
       break;
 
     default:
       message = `Transaction from ${walletAddress} to ${transaction.to} with value ${value}`;
       break;
   }
-  const walletData = await Wallets.findOne({walletAddress: walletAddress.toLowerCase()})
+  const walletData = await Wallets.findOne({
+    walletAddress: walletAddress.toLowerCase(),
+  });
   await client.messages.create({
     body: message,
     from: twilioNumber,
     to: String(walletData?.phone),
   });
   transaction.hasValidate = true;
-//   await transaction.save()
+  //   await transaction.save()
   logger.info(`Message ${message} send to phone ${walletData?.phone}`, {
     path: LOG_PATH,
   });
@@ -406,4 +413,3 @@ main().catch(async (err) => {
 
   process.exit(1);
 });
-

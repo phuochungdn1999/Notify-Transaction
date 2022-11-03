@@ -1,7 +1,4 @@
-import { UserInstance } from "@/interfaces/model/user";
 import { Routes } from "@/interfaces/routes";
-import Identifier from "@/utils/identifier";
-import { passportAuthenticateJWT, routeWrapper } from "@utils/routerWrapper";
 import { Router } from "express";
 import { DatabaseController } from "../database/DatabaseController";
 import { phone } from "phone";

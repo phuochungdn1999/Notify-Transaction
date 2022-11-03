@@ -1,7 +1,6 @@
 import { Blocks } from "@/models/block.model";
-import contract from "@config/contracts";
 import "dotenv/config";
-import { Contract, ethers } from "ethers";
+import { ethers } from "ethers";
 import { DatabaseController } from "../../database/DatabaseController";
 import BigNumber from "bignumber.js";
 import CronjobService from "@/services/common/cronjob.service";
@@ -66,56 +65,47 @@ async function excute() {
   if (currentBlock) {
     // const block = currentBlock?.blockNumber + 1;
     if (latestBlock > currentBlock.blockNumber) {
-      block = currentBlock.blockNumber + 1;
-      const data = await provider.getBlockWithTransactions(block);
+      await getBlockData(currentBlock.blockNumber + 1, provider);
 
-      console.log("data: ", data.transactions);
-
-      const transactionList = data.transactions.map((value: any) => {
-        return {
-          blockNumber: block,
-          hash: value.hash,
-          from: value.from,
-          to: value.to,
-          data: value.data,
-          value: new BigNumber(value.value._hex).toString(),
-          hasValidate: false
-        };
-      });
-      logger.info(`Transaction List ${transactionList}`, {
-        path: LOG_PATH,
-      });
       currentBlock.blockNumber += 1;
 
       await currentBlock.save();
-      // await DatabaseController.updateBlock(currentBlock);
-      await DatabaseController.CreateNewTransactions(transactionList);
     }
   } else {
-    block = latestBlock;
-    const data = await provider.getBlockWithTransactions(block);
+    await getBlockData(latestBlock, provider);
 
-    console.log("data: ", data.transactions);
-
-    const transactionList = data.transactions.map((value: any) => {
-      return {
-        blockNumber: block,
-        hash: value.hash,
-        from: value.from,
-        to: value.to,
-        data: value.data,
-        value: new BigNumber(value.value._hex).toString(),
-        hasValidate: false
-      };
-    });
-    logger.info(`Transaction List ${transactionList}`, {
-      path: LOG_PATH,
-    });
-
-    // await DatabaseController.updateBlock(currentBlock);
-    await DatabaseController.CreateNewTransactions(transactionList);
     await DatabaseController.CreateNewBlock(latestBlock);
   }
+  logger.info(`Get transaction from Block ${block}`, {
+    path: LOG_PATH,
+  });
+}
+
+async function getBlockData(block: any, provider: any) {
+  const data = await provider.getBlockWithTransactions(block);
+
+  console.log("data: ", data.transactions);
+
+  const transactionList = data.transactions.map((value: any) => {
+    return {
+      blockNumber: block,
+      hash: value.hash,
+      from: value.from,
+      to: value.to,
+      data: value.data,
+      value: new BigNumber(value.value._hex).toString(),
+      hasValidate: false,
+    };
+  });
+  logger.info(`Transaction List ${transactionList}`, {
+    path: LOG_PATH,
+  });
+
+  // await DatabaseController.updateBlock(currentBlock);
+  await DatabaseController.CreateNewTransactions(transactionList);
+
+  // await DatabaseController.updateBlock(currentBlock);
+
   logger.info(`Get transaction from Block ${block}`, {
     path: LOG_PATH,
   });
